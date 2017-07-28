@@ -2,6 +2,25 @@ const PImage = require('pureimage');
 const fs = require('fs');
 const SimplexNoise = require('simplex-noise');
 
+let gen = new SimplexNoise();
+function snoise(nx, ny) {
+    // Rescale from -1.0:+1.0 to 0.0:1.0
+    return gen.noise2D(nx, ny) / 2 + 0.5;
+}
+
+function lerp(t,A,B) {
+    return A + t*(B-A);
+}
+
+function lerps(t, values) {
+    var band = Math.floor(t*(values.length-1));
+    var band_size = 1/(values.length-1);
+    var fract = (t-(band_size*band))/band_size;
+    return lerp(fract,values[band],values[band+1]);
+}
+
+
+
 function makeColorHSV(h,s,v) {
 }
 
@@ -56,7 +75,7 @@ function rougher(noise) {
 }
 
 /* write 1d noise to a bitmap, assumes noise is 100 samples, values from 0->1 */
-function noise1DToBitmap(noise,w,h) {
+function noise1DToBitmap(noise,w,h, fname) {
     const img = PImage.make(w,h);
     const c = img.getContext('2d');
     c.fillStyle = 'white';
@@ -70,18 +89,10 @@ function noise1DToBitmap(noise,w,h) {
         img.setPixelRGBA_i(x, y, val, val, val, 255);
     });
 
-    PImage.encodePNGToStream(img, fs.createWriteStream('out.png')).then(() => console.log("done"));
+    PImage.encodePNGToStream(img, fs.createWriteStream(fname)).then(() => console.log("wrote",fname));
 }
 
 
-
-/*
-{
-    let noise = randArray(10 * 10+1);
-    noise = rougher(noise);
-    noise1DToBitmap(noise);
-}
-*/
 
 function scaleFrom(value, oldmin, oldmax, newmin, newmax) {
     let t =  (value-oldmin) / (oldmax-oldmin)
@@ -93,7 +104,7 @@ function clampToBands(v,bands) {
     return Math.round(v*bands)/bands;
 }
 
-function noiseTest() {
+function bandedNoiseTest() {
     let gen = new SimplexNoise();
     function snoise(nx, ny) {
         // Rescale from -1.0:+1.0 to 0.0:1.0
@@ -118,10 +129,9 @@ function noiseTest() {
             noise[i] = clampToBands(noise[i],5);
         }
     }
-    noise1DToBitmap(noise,width,height);
+    noise1DToBitmap(noise,width,height,'band1.png');
 }
-
-// noiseTest();
+bandedNoiseTest();
 
 function rgb1DToBitmap(rgb,w,h,file_name) {
     const img = PImage.make(w,h);
@@ -140,17 +150,8 @@ function rgb1DToBitmap(rgb,w,h,file_name) {
 
 }
 
-function lerp(t,A,B) {
-    return A + t*(B-A);
-}
 
 function simpleGradientTest(){
-
-    let gen = new SimplexNoise();
-    function snoise(nx, ny) {
-        // Rescale from -1.0:+1.0 to 0.0:1.0
-        return gen.noise2D(nx, ny) / 2 + 0.5;
-    }
     let noise = [];
     const width = 200, height = 200;
     for(let x=0; x<width; x++) {
@@ -171,41 +172,15 @@ function simpleGradientTest(){
             b: lerp(t, A.b, B.b)
         }
     }
-    const black = {r:0, g:0, b:0};
     const blue = {r:0, g:0, b:1};
-    const red = {r:1, g:0, b:0};
     const white = {r:1, g:1, b:1};
     let rgb = noise.map((v)=>lerpRGB(v,white,blue));
-    rgb1DToBitmap(rgb,width,height,"out1.png");
-
-
-    //apply a black to orangey-red gradient
-    // mapGrayscaleToRGB(noise)
+    rgb1DToBitmap(rgb,width,height,"grad1.png");
 }
 
-// simpleGradientTest();
-
-function lerps(t, arr) {
-    var section = Math.floor(t*(arr.length-1));
-    var a = arr[section];
-    var b = arr[section+1];
-    var section_length = 1/(arr.length-1);
-    var fract = (t-(section_length*section))/section_length;
-    var val = lerp(fract,a,b);
-    // console.log("t",t.toFixed(2),
-    //     'sect',section, 'sectl',section_length.toFixed(2),'t`',fract.toFixed(2),
-    //     'a',a,'b',b,'v',val.toFixed(2));
-    // console.log(val.toFixed(2));
-    return val;
-}
-
+simpleGradientTest();
 
 function multiColorGradientTest() {
-    let gen = new SimplexNoise();
-    function snoise(nx, ny) {
-        // Rescale from -1.0:+1.0 to 0.0:1.0
-        return gen.noise2D(nx, ny) / 2 + 0.5;
-    }
     let noise = [];
     const width = 100, height = 100;
     for(let x=0; x<width; x++) {
@@ -219,13 +194,7 @@ function multiColorGradientTest() {
         }
     }
 
-    const red = {r:1, g:0, b:0};
-    const yellow = {r:1, g:1, b:0};
-    const green= {r:0, g:1, b:0};
 
-    const black = {r:0, g:0, b:0};
-    const blue = {r:0, g:0, b:1};
-    const white = {r:1, g:1, b:1};
     function lerpRGBs(t, arr) {
         return {
             r: lerps(t, arr.map((C)=>C.r)),
@@ -233,6 +202,7 @@ function multiColorGradientTest() {
             b: lerps(t, arr.map((C)=>C.b)),
         }
     }
+    //black to red to yellow to white gradient
     let rgb = noise.map((v)=>lerpRGBs(v, [
         {r:0, g:0, b:0},
         {r:0, g:0, b:0},
@@ -241,8 +211,7 @@ function multiColorGradientTest() {
         {r:1, g:1, b:1},
         {r:1, g:1, b:1},
     ]));
-    rgb1DToBitmap(rgb,width,height,"out2.png");
-    //apply a four stop gradient.  black to dark red to orange to yellow to white
+    rgb1DToBitmap(rgb,width,height,"grad2.png");
 }
 multiColorGradientTest();
 
