@@ -245,7 +245,8 @@ function multiColorGradientTest() {
 }
 multiColorGradientTest();
 
-function HSVGradientTest() {
+
+function HSVNoiseTest() {
     //make an empty data set
     let data = gen_xy(400,400);
     //fill with six octaves of noise
@@ -256,5 +257,17 @@ function HSVGradientTest() {
 
     rgbToPNG(rgb,"grad3.png");
 }
-HSVGradientTest();
+HSVNoiseTest();
 
+function HSVGradientTest() {
+    //make an empty data set
+    let data = gen_xy(400,400);
+    //fill with six octaves of noise
+    let noise = map_xy(data, (v,x,y,nx,ny) => nx );
+    let rgb = map_xy(noise, (v,x,y,nx,ny)=>{
+        return HSVtoRGB(lerpHSV(v,{h:0,s:1,v:1},{h:1,s:1,v:1}));
+    });
+
+    rgbToPNG(rgb,"grad4.png");
+}
+HSVGradientTest();
