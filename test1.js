@@ -8,6 +8,21 @@ function snoise(nx, ny) {
     return gen.noise2D(nx, ny) / 2 + 0.5;
 }
 
+
+/*
+generate multiple octaves of noise, each half the magnitude of the previous.
+ex: 1/2, 1/4, 1/8, 1/16, etc.
+ */
+function octave_noise(nx,ny,octaves) {
+    let val = 0;
+    let ex = 2;
+    for(let i=0; i<octaves; i++) {
+        val += snoise(nx*ex,ny*ex)*(1/ex);
+        ex = ex*2;
+    }
+    return val;
+}
+
 function lerp(t,A,B) {
     return A + t*(B-A);
 }
@@ -55,6 +70,11 @@ function gen_xy(width, height, cb) {
     return data;
 }
 
+function map_xy(data,cb) {
+    return data.map(cb);
+}
+
+
 function makeColorHSV(h,s,v) {
 }
 
@@ -80,7 +100,7 @@ function randArray(length) {
     return out;
 }
 
-/* write 1d noise to a bitmap, assumes noise is 100 samples, values from 0->1 */
+/* write 1d noise to a bitmap, assumes noise is width * height samples, values from 0->1 */
 function noise1DToBitmap(noise,w,h, fname) {
     const img = PImage.make(w,h);
     const c = img.getContext('2d');
@@ -97,17 +117,7 @@ function noise1DToBitmap(noise,w,h, fname) {
 
     PImage.encodePNGToStream(img, fs.createWriteStream(fname)).then(() => console.log("wrote",fname));
 }
-
-function bandedNoiseTest() {
-    // let noise = [];
-    const width = 200, height = 200;
-    let noise = gen_xy(width,height,(x,y,nx,ny)=>{
-        return clampToBands(snoise(nx*2,ny*2)*0.5 + snoise(nx*4,ny*4)*0.25 + snoise(nx*8,ny*8)*0.125 + snoise(nx*16,ny*16)*(0.125/2),5);
-    });
-    noise1DToBitmap(noise,width,height,'band1.png');
-}
-bandedNoiseTest();
-
+/* write 1d noise to a bitmap, assumes noise is width * height samples, where each value is an rgb triplet */
 function rgb1DToBitmap(rgb,w,h,file_name) {
     const img = PImage.make(w,h);
     const c = img.getContext('2d');
@@ -125,16 +135,27 @@ function rgb1DToBitmap(rgb,w,h,file_name) {
 
 }
 
+function bandedNoiseTest() {
+    const width = 200, height = 200;
+    let noise = gen_xy(width,height,(x,y,nx,ny)=>{
+        return octave_noise(nx,ny,4);
+    });
+    noise1DToBitmap(noise,width,height,'band1.png');
+}
+bandedNoiseTest();
+
 
 function simpleGradientTest(){
     const width = 200, height = 200;
-    let noise = gen_xy(width,height,(x,y,nx,ny)=>{
-        //generate noise with 4 octaves
-        return (snoise(nx*2,ny*2)*0.5 + snoise(nx*4,ny*4)*0.25 + snoise(nx*8,ny*8)*0.125 + snoise(nx*16,ny*16)*(0.125/2));
-    });
+    //generate 4 octaves of noise
+    let noise = gen_xy(width,height,(x,y,nx,ny)=> octave_noise(nx,ny,4) );
 
     //map to a simple white to blue gradient
-    let rgb = noise.map((v)=>lerpRGB(v,{r:1,g:1,b:1},{r:0,g:0,b:1}));
+    const white = {r:1,g:1,b:1};
+    const blue = {r:0,g:0,b:1};
+    let rgb = map_xy(noise,(v)=>lerpRGB(v,white,blue));
+
+    //save it
     rgb1DToBitmap(rgb,width,height,"grad1.png");
 }
 
@@ -143,19 +164,10 @@ simpleGradientTest();
 function multiColorGradientTest() {
     const width = 100, height = 100;
 
-    let noise = gen_xy(width,height,(x,y,nx,ny) => {
-        //generate noise with 6 octaves
-        return (snoise(nx*1,ny*1)*1/2
-            + snoise(nx*2,ny*2)*1/4
-            + snoise(nx*4,ny*4)*1/8
-            + snoise(nx*8,ny*8)*1/16
-            + snoise(nx*16,ny*16)*1/32
-            + snoise(nx*32,ny*32)*1/64
-        );
-    });
+    let noise = gen_xy(width,height,  (x,y,nx,ny) => octave_noise(nx,ny,6) );
 
     //black to red to yellow to white gradient
-    let rgb = noise.map((v)=>lerpRGBs(v, [
+    let rgb = map_xy(noise,(v)=>lerpRGBs(v, [
         {r:0, g:0, b:0},
         {r:0, g:0, b:0},
         {r:1, g:0, b:0},
