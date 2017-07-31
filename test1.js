@@ -15,12 +15,16 @@ ex: 1/2, 1/4, 1/8, 1/16, etc.
  */
 function octave_noise(nx,ny,octaves) {
     let val = 0;
-    let ex = 2;
+    let freq = 1;
+    let max = 0;
+    let amp = 1;
     for(let i=0; i<octaves; i++) {
-        val += snoise(nx*ex,ny*ex)*(1/ex);
-        ex = ex*2;
+        val += snoise(nx*freq,ny*freq)*amp;
+        max += amp;
+        amp /= 2;
+        freq  *= 2;
     }
-    return val;
+    return val/max;
 }
 
 function lerp(t,A,B) {
@@ -113,7 +117,6 @@ function makeColorRGB(r,g,b) {
 }
 
 //http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
-
 function HSVtoRGB(hsv) {
     /**
      * Converts an HSV color value to RGB. Conversion formula
