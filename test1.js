@@ -205,8 +205,8 @@ function rgbToPNG(rgb,file_name) {
 }
 
 function bandedNoiseTest() {
-    let data = gen_xy(200,200);
-    let noise = map_xy(data,(val,x,y,nx,ny)=>octave_noise(nx,ny,4));
+    let data = gen_xy(200,200); //generate empty 200x200 image
+    let noise = map_xy(data,(val,x,y,nx,ny)=>octave_noise(nx,ny,4)); //fill w/ 4 octaves of noise
     dataToPNG(noise,'band1.png');
 }
 bandedNoiseTest();
@@ -220,7 +220,7 @@ function simpleGradientTest(){
     let data = gen_xy(200,200);
     //fill with 4 octaves of noise
     let noise = map_xy(data,(val,x,y,nx,ny)=> octave_noise(nx,ny,4));
-    //map to a simple white to blue gradient
+    //map black->white to a white->blue gradient
     let rgb = map_xy(noise,(v)=>lerpRGB(v,white,blue));
     //save it
     rgbToPNG(rgb,"grad1.png");
@@ -234,7 +234,7 @@ function multiColorGradientTest() {
     //fill with six octaves of noise
     let noise = map_xy(data, (v,x,y,nx,ny) => octave_noise(nx,ny,6) );
 
-    //map to a black to red to yellow to white gradient
+    //map gray-scale to a black to red to yellow to white gradient
     let rgb = map_xy(noise,(v)=>lerpRGBs(v, [
         {r:0, g:0, b:0},
         {r:0, g:0, b:0},
