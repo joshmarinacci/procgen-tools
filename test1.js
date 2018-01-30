@@ -274,3 +274,32 @@ function HSVGradientTest() {
     rgbToPNG(rgb,"grad4.png");
 }
 HSVGradientTest();
+
+const sin = (v)=>Math.sin(v)
+const cos = (v)=>Math.cos(v)
+const abs = (v)=>Math.abs(v)
+const sqrt = (v)=>Math.sqrt(v)
+
+function marbleTest() {
+    let data = gen_xy(400,400);
+    // let noise = map_xy(data, (v,x,y,nx,ny) => octave_noise(nx,ny,4) );
+    //map gray-scale to a black to red to yellow to white gradient
+    let rgb = map_xy(data,(v,x,y,nx,ny)=> {
+        // const va = octave_noise(nx/1,ny/1,4)
+        // const vv = 0.5+cos(v*Math.PI*2*10)/2
+        // const vv = abs(sin(va*Math.PI*2*20))
+        const theta = Math.PI*2
+        const v2 = octave_noise(nx*5,ny*5,4)*5
+        // let vv = abs(sin(nx*theta*8+v2))
+        const dist = sqrt(nx*nx+ny*ny)*30 + v2
+        let vv = (1+sin(dist))/2
+        return {r:vv,g:vv,b:vv}
+    });
+
+    //scale(0.1,0.1) => octave_noise(4) => map (0->1 => 0->2Pi) => times 20 => sin() => abs() => rgb(v)
+
+
+    //save it
+    rgbToPNG(rgb,"marble.png");
+}
+marbleTest()
