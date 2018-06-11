@@ -4,6 +4,7 @@
   "description": "",
   "main": "test1.js",
   "dependencies": {
+    "colorsys": "^1.0.21",
     "pureimage": "^0.1.2",
     "simplex-noise": "^2.3.0"
   },

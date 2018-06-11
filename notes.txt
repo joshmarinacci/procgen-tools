@@ -1,4 +1,4 @@
-Thanks to work I'm ding at work on I started reading a book on procedural content generation. ProcGen is all about creating interesting systems about randomness, which enevitably bbrings up texture generation, which brings up perlin noise.  I've studied perlin noise before but I've always have trouble grasping it intuitively. I've learned out to calculate it by following tutorials, but honestly the noise generation is the least interesting part of it.
+Thanks to a project I'm doing at work on I started reading a book on procedural content generation. ProcGen is all about creating interesting systems about randomness, which enevitably bbrings up texture generation, which brings up perlin noise.  I've studied perlin noise before but I've always have trouble grasping it intuitively. I've learned out to calculate it by following tutorials, but honestly the noise generation is the least interesting part of it.
 
 
 The tricky part is getting an intuitive sense of how to use it. If you've ever used quartz composer or other node based systems (meaning a boxes and line graph interface, not NodeJS) then you've seen how they work. you wire up a bunch of blocks then endlessly tweak the variables. but how do the variables effect the output? if you are trying to get a certain look, then how should you adjust the variables? I don't know. I lack an intuition of how the equations combine, so that I can have a base to start with.  It's like paint. I may not know where each bristle will land, but I have an inutitive sense of how the paint will flow and combine based on my experience with paint. I need that experience with noise functions.
@@ -123,3 +123,23 @@ awesome. We've got some real noise!
 
 Okay, that's it for tonight. See you soon, when we mix in some sin waves.
 
+----
+
+Now that I've got a little toolkit, let's draw a simple sin wave.  As you may recall
+from trig, the sin function goes from -1 to 1. It also loops forever. that's going to be handy.
+
+sin accepts an angle. Let's make the angle go from 0 to 360 as we go over the iamge from left to right. I fyou remember
+from last time, ix goes from 0-1, but sine wants radians, 0 -> 2*pi. So let's scale the input times 2pi to make our angle
+theta.
+
+sin produces a value that goes from -1 to 1, but when we produce colors we want 0 - 1, so let's remap it as well
+rescale it to fit in the range we want by adding 1 (so it's 0-2) then dividing by 2
+
+cool. now we get an image with a single sin wave from left to right. The dark parts are the bottom of hte wave and the light parts are the top.  we aren't using hte y value so every column has the same colors, it only varies horinztally.
+
+[image]
+
+now let's have some fun. Sin is a periodic function. it repeats. how fast it repeats is called the frequency. If we want it to repeat faster, then we need to put in an angle which changes faster. We can do that by scaling theta up. Let's multiplly it by
+4
+
+[image]
