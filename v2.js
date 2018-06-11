@@ -75,3 +75,19 @@ save(map(gen(100,100), (cur,px,py,ix,iy) => {
     const v = (1 + vx)/2
     return {r:v,g:v,b:v}
 }), 'v2_2.png')
+
+save(map(gen(100,100), (cur,px,py,ix,iy) => {
+    let theta = ix*2*pi // convert pixels to radians
+    theta += octave(ix,iy,2)*1 //displace theta by the noise, increase the 4 factor to make the noise stronger
+    const vx = sin(theta*4) //calc sin. increase the 4 factor to make more vertical lines
+    let v = (1 + vx)/2 //map [-1,1] to [0-1]
+    return {r:v,g:v,b:v} //return grayscale
+}), 'v2_3.png')
+
+save(map(gen(100,100), (cur,px,py,ix,iy) => {
+    let theta = ix*2*pi // convert pixels to radians
+    theta += octave(ix,iy,8)*4 //displace theta by the noise, increase the 4 factor to make the noise stronger
+    const vx = sin(theta*4) //calc sin. increase the 4 factor to make more vertical lines
+    let v = (1 + vx)/2 //map [-1,1] to [0-1]
+    return {r:v,g:v,b:v} //return grayscale
+}), 'v2_4.png')
