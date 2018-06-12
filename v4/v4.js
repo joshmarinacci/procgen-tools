@@ -96,9 +96,9 @@ function HSVtoRGB(hsv) {
      * @param   Number  v       The value
      * @return  Array           The RGB representation
      */
-    let h = hsv.h;
-    let s = hsv.s;
-    let v = hsv.v;
+    let h = hsv[0];
+    let s = hsv[1];
+    let v = hsv[2];
         var r, g, b;
         var i = Math.floor(h * 6);
         var f = h * 6 - i;
@@ -113,7 +113,7 @@ function HSVtoRGB(hsv) {
             case 4: r = t, g = p, b = v; break;
             case 5: r = v, g = p, b = q; break;
         }
-        return {r:r, g:g, b:b}
+        return [r,g,b]
 }
 // http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
 function RGBtoHSV(rgb) {
@@ -163,18 +163,134 @@ const green = [0,1,0]
 const white = [1,1,1]
 const black = [0,0,0]
 
+const band1 = [red,red,green,green,white,white]
+const floor = Math.floor
 
 save(map(gen(200,200), (cur,px,py,ix,iy) => {
-    let theta1 = remap(ix,[0,1],[0,2*pi])
-    let theta2 = remap(iy,[0,1],[0,2*pi])
-    const vn = octave(ix,iy,30)
-    let v1 = sin(theta1*3)
-    let v2 = sin(theta2*4)
-    v1 = (1 + v1)/2 //map [-1,1] to [0-1]
-    v2 = (1 + v2)/2 //map [-1,1] to [0-1]
-    if(vn < 0.5) {
-        return lerpColors(v1,[red,green])
-    } else {
-        return lerpColors(v2,[black,white])
+    const c1 = [0,1,1]
+    const c2 = [c1[0],c1[1]/2,c1[2]/2]
+    const band = [c1,c2]
+    return band[floor(ix*band.length)]
+}), 'v4_1.png')
+
+
+function darker(hsv) {
+    return [hsv[0], hsv[1], hsv[2]-0.1]
+}
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = []
+    let color = [0,1,1]
+    colors.push(color)
+    for(let n=0; n<10; n++) {
+        color = darker(color)
+        colors.push(color)
     }
-}), 'v3_9.png')
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_2.png')
+
+function complimentary(hsv) {
+    return [hsv[0]+0.5,hsv[1],hsv[2]]
+}
+
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = []
+    let color = [0,1,1]
+    colors.push(color)
+    colors.push(complimentary(color))
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_3a.png')
+
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = []
+    let color = [0.2,1,1]
+    colors.push(color)
+    colors.push(complimentary(color))
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_3b.png')
+
+
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = []
+    let color = [0.3,1,1]
+    colors.push(color)
+    colors.push(complimentary(color))
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_3c.png')
+
+
+function triadic(base) {
+    return [
+        [base[0]+0.000,base[1],base[2]],
+        [base[0]+1/3,base[1],base[2]],
+        [base[0]+2/3,base[1],base[2]],
+    ]
+}
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = triadic([0.3,1,1])
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_4a.png')
+
+
+function analagous(base) {
+    return [
+        [base[0]+0.000,base[1],base[2]],
+        [base[0]+1/12,base[1],base[2]],
+        [base[0]-1/12+1,base[1],base[2]],
+    ]
+}
+
+
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = analagous([0.3,1,1])
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_4b.png')
+
+save(map(gen(200,200), (cur,px,py,ix,iy) => {
+    const colors = analagous([0.3,1,1])
+    colors[1] = darker(colors[1])
+    colors[2] = darker(colors[2])
+    const band = colors.map(c => HSVtoRGB(c))
+    return band[floor(ix*band.length)]
+}), 'v4_4c.png')
+
+
+//rotate hue slightly by a set amount, then pick a random
+//saturation and value
+
+function add(c1, c2) {
+    return [c1[0]+c2[0], c1[1]+c2[1], c1[2]+c2[2]]
+}
+
+function wrap(v) {
+    if(v <0) return -v
+    if(v >1) return 2-v
+    return v
+}
+
+function generateRandomGradient(count) {
+    const random = Math.random
+    const colors = []
+    let color = [0.3,0.5,1]
+    for(let i=0; i<20; i++) {
+        //rotate the hue by 0.05
+        color = add(color,[0.02,0,0])
+        //adjust the staturation by a random amount
+        color = add(color,[0,+random(),+random()/2])
+
+        //flip it if outside the range
+        color[1] = wrap(color[1])
+        color[2] = wrap(color[2])
+        colors.push(color)
+    }
+    const band = colors.map(c => HSVtoRGB(c))
+    save(map(gen(200,200), (cur,px,py,ix,iy) => {
+        return band[floor(ix*band.length)]
+    }), `v4_5_${count}.png`)
+}
+for(let i=0; i<10; i++) generateRandomGradient(i)
