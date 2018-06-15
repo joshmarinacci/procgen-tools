@@ -69,6 +69,29 @@ module.exports = {
             case 5: r = v, g = p, b = q; break;
         }
         return [r,g,b]
-}
+    },
+
+    lerp: function(t,A,B) {
+        return A+t*(B-A)
+    },
+    lerps: (t, values) => {
+        var band = Math.floor(t*(values.length-1));
+        if(t === 1.0) band = (values.length-1)-1
+        var band_size = 1/(values.length-1);
+        var fract = (t-(band_size*band))/band_size;
+        return module.exports.lerp(fract,values[band],values[band+1]);
+    },
+    lerpColors:function(t, arr) {
+        //get the first color so we know it has 3 elements
+        const first = arr[0]
+        return first.map((c,comp) => {
+            return lerps(t, arr.map(color=>color[comp]))
+        })
+    },
+    remap: function(value, start, end) {
+        const t = (value-start[0])/(start[1]-start[0])
+        return t * (end[1]-end[0]) + end[0]
+    },
+
 
 }
